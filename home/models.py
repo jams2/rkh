@@ -1,12 +1,17 @@
-from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
+from wagtail.admin.edit_handlers import StreamFieldPanel
 from wagtail.core import blocks
 from wagtail.core.models import Page
-from wagtail.core.fields import RichTextField, StreamField
+from wagtail.core.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 
 
 class HomePage(Page):
     pass
+
+
+class ImageGalleryBlock(blocks.StreamBlock):
+    image = ImageChooserBlock()
+    caption = blocks.CharBlock(required=False)
 
 
 class LinkButtonValue(blocks.StructValue):
@@ -38,6 +43,7 @@ class FancyPage(Page):
             ("main_content", blocks.RichTextBlock()),
             ("image", ImageChooserBlock()),
             ("sub_section", RKHStructBlock()),
+            ("image_gallery", ImageGalleryBlock(max_num=16)),
         ]
     )
 

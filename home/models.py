@@ -92,6 +92,4 @@ class FancyPage(Page):
         ]
     )
 
-    content_panels = Page.content_panels + [
-        StreamFieldPanel("body"),
-    ]
+    content_panels = Page.content_panels + [StreamFieldPanel("body")]

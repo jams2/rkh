@@ -1,3 +1,5 @@
+import re
+
 from django.forms.utils import ErrorList
 from django.core.validators import ValidationError
 from wagtail.admin.edit_handlers import StreamFieldPanel
@@ -53,8 +55,18 @@ def title_field_validator(val: str) -> None:
             raise ValidationError('title cannot contain the word "the"')
 
 
-def trim_trailing_punct(word: str) -> str:
-    return word if word[-1].isalnum() else word[:-1]
+def trim_punct(word: str) -> str:
+    """Trim leading and trailing punctuation marks.
+    """
+    if len(word) < 2:
+        return word if word[0].isalnum() else ""
+    elif not word:
+        return ""
+    if not word[0].isalnum():
+        word = word[1:]
+    if not word[-1].isalnum():
+        word = word[:-1]
+    return word
 
 
 class RKHStructBlock(blocks.StructBlock):
@@ -64,13 +76,24 @@ class RKHStructBlock(blocks.StructBlock):
     link_2 = LinkButtonBlock()
 
     def clean(self, value):
+        """Don't allow any word in the title to appear in the content.
+
+        To get the blacklist from the title, split on whitespace. Trim
+        leading and trailing punctuation so 'this.' or '"this' in the title
+        will match 'this' in the content.
+
+        Then do a case insensitive re.search to determine if any word
+        in the title appears in the content. Add an error and bail out
+        on the first match.
+        """
+        word_boundary = r"(\b|[^A-Z0-9])"  # word boundary or punctuation marks.
         errors = {}
-        exclude_words = set(
-            trim_trailing_punct(x.lower()) for x in value.get("title").split()
-        )
-        content = value.get("content").source.lower()
+        title_words = value.get("title").split()
+        exclude_words = set(filter(lambda x: x, (trim_punct(x) for x in title_words)))
+        content = value.get("content").source
         for word in exclude_words:
-            if word in content:
+            pattern = word_boundary + word + word_boundary
+            if re.search(pattern, content, re.IGNORECASE):
                 errors["content"] = ErrorList(
                     [f'the word "{word}" cannot be in title AND content']
                 )

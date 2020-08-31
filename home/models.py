@@ -33,7 +33,7 @@ class LinkButtonBlock(blocks.StructBlock):
 
     def clean(self, value):
         errors = {}
-        error_message = "exactly one of either page or external_url is required"
+        error_message = "choose either page or external_url"
         if (not value.get("page") and not value.get("external_url")) or (
             value.get("page") and value.get("external_url")
         ):
